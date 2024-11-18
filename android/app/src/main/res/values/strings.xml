@@ -1,0 +1,7 @@
+<resources>
+  <string name="asset_statements" translatable="false">
+  [{
+    \"include\": \"https://zany-space-telegram-x4w9qvv6jgvfvpgp-8000.app.github.dev/.well-known/assetlinks.json\"
+  }]
+  </string>
+</resources>
