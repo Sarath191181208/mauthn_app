@@ -1,6 +1,5 @@
 import 'dart:convert';
 
-import 'package:dio/dio.dart';
 import 'package:mauthn_app/const.dart';
 import 'package:mauthn_app/services/api/api.dart';
 import 'package:passkeys/types.dart';
