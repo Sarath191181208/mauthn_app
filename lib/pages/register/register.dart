@@ -3,7 +3,10 @@ import 'dart:developer';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:mauthn_app/providers.dart';
+import 'package:mauthn_app/routes.dart';
 import 'package:mauthn_app/services/api/api.dart';
+
+import 'package:go_router/go_router.dart';
 
 final errorProvider = StateProvider<String?>((ref) => null);
 
@@ -87,12 +90,14 @@ class RegisterPage extends ConsumerWidget {
                         }
 
                         try {
-                          await authService.signupWithPasskey(
+                          final userId = await authService.signupWithPasskey(
                             apiHandler: apiHandler,
                             email: email,
                           );
                           ref.read(errorProvider.notifier).state =
                               null; // Clear error
+                          ref.read(userIdProvider.notifier).state = userId;
+                          context.go(Routes.logIn);
                           log("Signup successful for $email");
                         } catch (e) {
                           ref.read(errorProvider.notifier).state = e.toString();
@@ -115,6 +120,7 @@ class RegisterPage extends ConsumerWidget {
                   TextButton.icon(
                     onPressed: () {
                       // Navigate to login or other actions
+                      context.go(Routes.logIn);
                       log("Navigate to login");
                     },
                     icon: const Icon(Icons.login_rounded),
