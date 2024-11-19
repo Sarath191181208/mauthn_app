@@ -5,6 +5,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:mauthn_app/providers.dart';
 import 'package:mauthn_app/services/api/api.dart';
 
+final errorProvider = StateProvider<String?>((ref) => null);
+
 class RegisterPage extends ConsumerWidget {
   const RegisterPage({super.key});
 
@@ -13,74 +15,116 @@ class RegisterPage extends ConsumerWidget {
     final emailController = TextEditingController();
     final authService = ref.watch(authServiceProvider);
     final apiHandler = ApiService();
-
-    var errorProv = Provider<String?>((ref) {
-      return null;
-    });
-
-    String? error = ref.watch(errorProv);
+    final error = ref.watch(errorProvider);
 
     return Scaffold(
-      body: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          const Padding(
-            padding: EdgeInsets.symmetric(horizontal: 20, vertical: 5),
-            child: Text(
-              'Tired of passwords?',
-              style: TextStyle(
-                fontSize: 40,
-                fontWeight: FontWeight.bold,
+      body: SafeArea(
+        child: Center(
+          child: SingleChildScrollView(
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 20),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.center,
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  const Icon(
+                    Icons.fingerprint_rounded,
+                    size: 80,
+                    color: Colors.blue,
+                  ),
+                  const SizedBox(height: 20),
+                  const Text(
+                    'Tired of passwords?',
+                    textAlign: TextAlign.center,
+                    style: TextStyle(
+                      fontSize: 32,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  const SizedBox(height: 10),
+                  const Text(
+                    'Sign up using your biometrics like fingerprint or face.',
+                    textAlign: TextAlign.center,
+                    style: TextStyle(
+                      fontSize: 16,
+                      color: Colors.grey,
+                    ),
+                  ),
+                  const SizedBox(height: 40),
+                  TextField(
+                    controller: emailController,
+                    keyboardType: TextInputType.emailAddress,
+                    decoration: const InputDecoration(
+                      prefixIcon: Icon(Icons.email_rounded),
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.all(Radius.circular(12)),
+                      ),
+                      hintText: 'Email address',
+                    ),
+                  ),
+                  if (error != null)
+                    Padding(
+                      padding: const EdgeInsets.only(top: 10),
+                      child: Text(
+                        error,
+                        style: TextStyle(
+                          color: Theme.of(context).colorScheme.error,
+                          fontSize: 14,
+                        ),
+                      ),
+                    ),
+                  const SizedBox(height: 20),
+                  SizedBox(
+                    width: double.infinity,
+                    height: 50,
+                    child: ElevatedButton.icon(
+                      onPressed: () async {
+                        final email = emailController.value.text.trim();
+                        if (email.isEmpty) {
+                          ref.read(errorProvider.notifier).state =
+                              'Email address cannot be empty.';
+                          return;
+                        }
+
+                        try {
+                          await authService.signupWithPasskey(
+                            apiHandler: apiHandler,
+                            email: email,
+                          );
+                          ref.read(errorProvider.notifier).state =
+                              null; // Clear error
+                          log("Signup successful for $email");
+                        } catch (e) {
+                          ref.read(errorProvider.notifier).state = e.toString();
+                          log("ERROR: $e");
+                        }
+                      },
+                      icon: const Icon(Icons.lock_open_rounded),
+                      label: const Text(
+                        'Sign Up',
+                        style: TextStyle(fontSize: 16),
+                      ),
+                      style: ElevatedButton.styleFrom(
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 10),
+                  TextButton.icon(
+                    onPressed: () {
+                      // Navigate to login or other actions
+                      log("Navigate to login");
+                    },
+                    icon: const Icon(Icons.login_rounded),
+                    label: const Text('Already have an account? Log in'),
+                  ),
+                ],
               ),
             ),
           ),
-          const Padding(
-            padding: EdgeInsets.symmetric(horizontal: 20, vertical: 10),
-            child: Text(
-              'Sign up using your biometrics like fingerprint or face.',
-              style: TextStyle(
-                fontSize: 20,
-              ),
-            ),
-          ),
-          Padding(
-            padding: const EdgeInsets.symmetric(vertical: 4),
-            child: TextField(
-              controller: emailController,
-              keyboardType: TextInputType.emailAddress,
-              decoration: const InputDecoration(
-                border: OutlineInputBorder(),
-                hintText: 'email address',
-              ),
-            ),
-          ),
-          if (error != null)
-            Text(
-              error,
-              style: TextStyle(color: Theme.of(context).colorScheme.error),
-            )
-          else
-            Container(),
-          const SizedBox(height: 20),
-          SizedBox(
-            width: double.infinity,
-            height: 50,
-            child: ElevatedButton(
-              onPressed: () async {
-                final email = emailController.value.text;
-                try {
-                  await authService.signupWithPasskey(
-                      apiHandler: apiHandler, email: email);
-                } catch (e) {
-                  errorProv.overrideWithValue(e.toString());
-                  log("ERROR: $e");
-                }
-              },
-              child: const Text('sign up'),
-            ),
-          ),
-          const SizedBox(height: 10),
-        ],
+        ),
       ),
     );
   }
