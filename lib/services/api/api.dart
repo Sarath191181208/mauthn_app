@@ -1,6 +1,8 @@
 import 'dart:developer';
 
+import 'package:cookie_jar/cookie_jar.dart';
 import 'package:dio/dio.dart';
+import 'package:dio_cookie_manager/dio_cookie_manager.dart';
 import 'package:mauthn_app/const.dart';
 
 class APIError {
@@ -14,16 +16,18 @@ class ApiService {
   late Dio _dio;
 
   ApiService() {
+    final jar = CookieJar();
     _dio = Dio(BaseOptions(
       baseUrl: apiUrl,
       connectTimeout: const Duration(seconds: 10),
       receiveTimeout: const Duration(seconds: 10),
     ))
-      ..interceptors.add(
+      ..interceptors.addAll([
         LogInterceptor(
           requestHeader: true,
         ),
-      );
+        CookieManager(jar),
+      ]);
   }
 
   Future<APIResponse> get(String endpoint) async {
@@ -31,8 +35,9 @@ class ApiService {
       final response = await _dio.get(endpoint);
       return response;
     } catch (e, s) {
-      log('Error in GET request: $e',
-          stackTrace: s, error: e, name: "ApiService GET: ");
+      log('Error in POST request: $e',
+          error: e, stackTrace: s, name: "ApiService GET: ");
+
       rethrow;
     }
   }
@@ -41,7 +46,8 @@ class ApiService {
     try {
       final response = await _dio.post(endpoint, data: data);
       return response;
-    } catch (e, s) {
+    } on DioException catch (e, s) {
+      log(e.response?.data);
       log('Error in POST request: $e',
           error: e, stackTrace: s, name: "ApiService POST: ");
 
