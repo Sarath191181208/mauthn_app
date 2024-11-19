@@ -27,3 +27,26 @@ Future<APIResponse> completeRegister(
   };
   return apiHandler.post(registerEndEndpoint, data);
 }
+
+Future<APIResponse> fetchLoginOptions(ApiService apiHandler,
+    {required String userid}) async {
+  return apiHandler.post(loginOptionsEndpoint, {"user_id": userid});
+}
+
+Future<APIResponse> completeAuthentication(
+    ApiService apiHandler, AuthenticateResponseType response,
+    {required String userid}) async {
+  var data = {
+    "id": response.id,
+    "rawId": response.rawId,
+    "response": {
+      "clientDataJSON": response.clientDataJSON,
+      "authenticatorData": response.authenticatorData,
+      "signature": response.signature,
+      "userHandle": response.userHandle,
+    },
+    "type": "public-key",
+  };
+  return apiHandler
+      .post(loginEndEndpoint, {"user_id": userid, "user_response": data});
+}
