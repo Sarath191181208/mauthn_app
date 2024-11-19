@@ -26,7 +26,7 @@ class _LoginPageState extends ConsumerState<LoginPage> {
     final error = useState<String?>(null);
     final userid = ref.watch(userIdProvider);
     final authService = ref.watch(authServiceProvider);
-    final apiHandler = ApiService();
+    final apiHandler = ref.watch(apiHandlerProvider);
 
     return BasePage(
       child: Column(

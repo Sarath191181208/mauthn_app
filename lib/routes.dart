@@ -1,6 +1,6 @@
-
 import 'package:go_router/go_router.dart';
 import 'package:mauthn_app/pages/login/login.dart';
+import 'package:mauthn_app/pages/register/home/home.dart';
 import 'package:mauthn_app/pages/register/register.dart';
 
 class Routes {
@@ -8,7 +8,6 @@ class Routes {
   static const logIn = '/log-in';
   static const home = '/home';
 }
-
 
 final GoRouter router = GoRouter(
   initialLocation: Routes.register,
@@ -21,5 +20,9 @@ final GoRouter router = GoRouter(
       path: Routes.logIn,
       builder: (context, state) => const LoginPage(),
     ),
+    GoRoute(
+      path: Routes.home,
+      builder: (context, state) => const HomePage(),
+    )
   ],
 );

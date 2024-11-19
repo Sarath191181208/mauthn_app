@@ -6,6 +6,10 @@ final registerOptionsEndpoint = buildUrl(apiUrl, "auth/register/options");
 final registerEndEndpoint = buildUrl(apiUrl, "auth/register/verify");
 final loginOptionsEndpoint = buildUrl(apiUrl, "auth/authenticate/options");
 final loginEndEndpoint = buildUrl(apiUrl, "auth/authenticate/verify");
+final requestValidateEnpoint = buildUrl(apiUrl, "verify/user/requests");
+String getUserLoginRequests({required String userId}) {
+  return buildUrl(apiUrl, "/verify/user/requests/$userId");
+}
 
 String buildUrl(String endpoint, String additionalPath) {
   if (additionalPath.startsWith("/")) {
