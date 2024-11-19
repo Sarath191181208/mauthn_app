@@ -36,4 +36,26 @@ class ReplyingPartyServer {
     const httpCreated = 201;
     return res.statusCode == httpCreated;
   }
+
+  Future<AuthenticateRequestType> startPasskeyLogin(
+      {required ApiService apiHandler, required String userid}) async {
+    final data =
+        jsonDecode((await fetchLoginOptions(apiHandler, userid: userid)).data);
+
+    return AuthenticateRequestType(
+      relyingPartyId: data["rpId"],
+      challenge: data["challenge"],
+      userVerification: data["userVerification"],
+      timeout: data["timeout"],
+      mediation: MediationType.Optional,
+      preferImmediatelyAvailableCredentials: false,
+    );
+  }
+
+  Future<void> finishPasskeyLogin(
+      {required ApiService apiHandler,
+      required String userid,
+      required AuthenticateResponseType response}) async {
+    await completeAuthentication(apiHandler, response, userid: userid);
+  }
 }
