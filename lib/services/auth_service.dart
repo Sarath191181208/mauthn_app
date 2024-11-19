@@ -2,6 +2,7 @@ import 'dart:developer';
 
 import 'package:mauthn_app/pages/register/replying_party_server.dart';
 import 'package:mauthn_app/services/api/api.dart';
+import 'package:mauthn_app/services/replying_party_server.dart';
 import 'package:passkeys/authenticator.dart';
 
 class AuthService {
