@@ -9,3 +9,7 @@ final authServiceProvider = Provider<AuthService>((ref) {
 
   return AuthService(rps: rps, authenticator: authenticator);
 });
+
+final userIdProvider = StateProvider<String>((ref) {
+  return 'ZjE0YWEwZGItMjBlMy00OGQwLWIwYTEtYTI5ZjExYmY5ODMy';
+});
