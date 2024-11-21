@@ -13,7 +13,7 @@ class AuthService {
     final rps1 =
         await rps.startPasskeyLogin(apiHandler: apiHandler, userid: userid);
     final authRes = await authenticator.authenticate(rps1);
-    rps.finishPasskeyLogin(
+    await rps.finishPasskeyLogin(
         apiHandler: apiHandler, userid: userid, response: authRes);
   }
 
