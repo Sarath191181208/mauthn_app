@@ -12,7 +12,7 @@ final authServiceProvider = Provider<AuthService>((ref) {
 });
 
 final userIdProvider = StateProvider<String>((ref) {
-  return 'ZjE0YWEwZGItMjBlMy00OGQwLWIwYTEtYTI5ZjExYmY5ODMy';
+  return 'NjNiNTliNWMtYzkwYy00NDkzLThhMjYtNzNiMjIwZWRhZjE0';
 });
 
 final apiHandlerProvider = Provider<ApiService>((ref) => ApiService());
