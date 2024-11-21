@@ -11,7 +11,7 @@ class Routes {
 }
 
 final GoRouter router = GoRouter(
-  initialLocation: Routes.home,
+  initialLocation: Routes.logIn,
   routes: [
     GoRoute(
       path: Routes.register,
