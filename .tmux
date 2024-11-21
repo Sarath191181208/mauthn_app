@@ -13,6 +13,7 @@ if [ $? -ne 0 ];
 
    # Window 2: Command line window
    tmux new-window -t $SESSIONNAME:2 -n ''
+   tmux send-keys -t $SESSIONNAME:2 'adb connect 192.168.29.223:'
 fi
 
 tmux attach -t $SESSIONNAME
