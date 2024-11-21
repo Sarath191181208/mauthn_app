@@ -7,6 +7,11 @@ Future<APIResponse> getPendingValidationRequests(ApiService apiHandler,
   return apiHandler.get(getUserLoginRequests(userId: userid));
 }
 
+ Future<APIResponse> getValidationRequestsHistory(ApiService apiHandler,
+    {required String userid}) async{
+  return apiHandler.get(historyEndpoint);
+}
+
 Future<APIResponse> publishRequestStatus(
     ApiService apiHandler, PendingStatus status,
     {required int requestId}) async {
