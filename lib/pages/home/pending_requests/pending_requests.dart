@@ -37,7 +37,7 @@ class _PendingRequestsPageState extends ConsumerState<PendingRequestsPage> {
     try {
       await sendPendingRequestStatus(
         apiHandler,
-        PendingStatus.rejected,
+        status,
         requestId: requestId,
       );
       return true;
