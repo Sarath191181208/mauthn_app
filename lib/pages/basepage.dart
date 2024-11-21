@@ -8,7 +8,6 @@ class BasePage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Passkey authentication')),
       body: Center(
         child: Container(
           constraints: const BoxConstraints(maxWidth: 500),
