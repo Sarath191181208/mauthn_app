@@ -175,37 +175,3 @@ class RegisterPage extends ConsumerWidget {
     );
   }
 }
-
-/*
-                final email = emailController.value.text.trim();
-                if (email.isEmpty) {
-                  ref.read(errorProvider.notifier).state =
-                      'Email address cannot be empty.';
-                  return;
-                }
-
-                try {
-                  final userId = await authService.signupWithPasskey(
-                    apiHandler: apiHandler,
-                    email: email,
-                  );
-                  ref.read(errorProvider.notifier).state = null; // Clear error
-                  ref.read(userIdProvider.notifier).state = userId;
-                  context.go(Routes.logIn);
-                  log("Signup successful for $email");
-                } catch (e) {
-                  ref.read(errorProvider.notifier).state = e.toString();
-                  log("ERROR: $e");
-                }
-
-
-          TextButton.icon(
-            onPressed: () {
-              // Navigate to login or other actions
-              context.go(Routes.logIn);
-              log("Navigate to login");
-            },
-            icon: const Icon(Icons.login_rounded),
-            label: const Text('Already have an account? Log in'),
-          ),
-*/
