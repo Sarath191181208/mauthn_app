@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:mauthn_app/components/request_card.dart';
 import 'package:mauthn_app/models/pending_request.dart';
 import 'package:mauthn_app/providers.dart';
 import 'package:mauthn_app/services/api/api.dart';
@@ -31,6 +32,32 @@ class _HomePageState extends ConsumerState<HomePage> {
     });
   }
 
+  Future<bool> sendRequest(
+      {required int requestId, required PendingStatus status}) async {
+    try {
+      await sendPendingRequestStatus(
+        apiHandler,
+        PendingStatus.rejected,
+        requestId: requestId,
+      );
+      return true;
+    } catch (e) {
+      return false;
+    }
+  }
+
+  handleRequestAction(int requestId, List<PendingRequest> requests,
+      PendingStatus status) async {
+    bool isRequestSent =
+        await sendRequest(requestId: requestId, status: status);
+
+    if (isRequestSent) {
+      setState(() {
+        requests.removeWhere((element) => element.id == requestId);
+      });
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -39,42 +66,25 @@ class _HomePageState extends ConsumerState<HomePage> {
         child: FutureBuilder<List<PendingRequest>>(
           future: _pendingRequests,
           builder: (context, snapshot) {
+            // Show the loading page
             if (snapshot.connectionState == ConnectionState.waiting) {
               return const Center(child: CircularProgressIndicator());
-            } else if (snapshot.hasError) {
-              return Center(
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    const Icon(Icons.error_outline,
-                        size: 64, color: Colors.red),
-                    const SizedBox(height: 8),
-                    Text(
-                      "Error: ${snapshot.error}",
-                      style: Theme.of(context)
-                          .textTheme
-                          .titleMedium
-                          ?.copyWith(color: Colors.red),
-                      textAlign: TextAlign.center,
-                    ),
-                  ],
-                ),
+            }
+
+            // If any error occured
+            else if (snapshot.hasError) {
+              return ErrorText(
+                error: snapshot.error,
               );
-            } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
-              return const Center(
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Icon(Icons.inbox, size: 64, color: Colors.grey),
-                    SizedBox(height: 8),
-                    Text(
-                      "No pending requests found.",
-                      style: TextStyle(fontSize: 18, color: Colors.grey),
-                    ),
-                  ],
-                ),
-              );
-            } else {
+            }
+
+            // If snapshot has no data
+            else if (!snapshot.hasData || snapshot.data!.isEmpty) {
+              return NoRequestsFoundWidget(reload: _refresh);
+            }
+
+            // show the list ui
+            else {
               final requests = snapshot.data!;
               return ListView.builder(
                 padding:
@@ -82,14 +92,12 @@ class _HomePageState extends ConsumerState<HomePage> {
                 itemCount: requests.length,
                 itemBuilder: (context, index) {
                   final request = requests[index];
-                  return PendingRequestCard(
-                    request: request,
-                    apiHandler: apiHandler,
-                    onAPISuccess: (id) => {
-                      setState(() {
-                        requests.removeWhere((element) => element.id == id);
-                      })
-                    },
+                  return RequestCard(
+                    card: request,
+                    onAccept: () async => handleRequestAction(
+                        request.id, requests, PendingStatus.approved),
+                    onReject: () async => handleRequestAction(
+                        request.id, requests, PendingStatus.rejected),
                   );
                 },
               );
@@ -101,181 +109,72 @@ class _HomePageState extends ConsumerState<HomePage> {
   }
 }
 
-class PendingRequestCard extends StatelessWidget {
-  final PendingRequest request;
-  final ApiService apiHandler;
-  final Function(int) onAPISuccess;
-
-  const PendingRequestCard(
-      {super.key, required this.request, required this.apiHandler, required this.onAPISuccess});
-
-  @override
-  Widget build(BuildContext context) {
-    return Card(
-      margin: const EdgeInsets.symmetric(vertical: 8, horizontal: 16),
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(16),
-      ),
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              children: [
-                const UserIcon(),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: RequesterName(request: request),
-                ),
-                Chip(
-                  side: BorderSide(
-                    color: Colors.grey[350]!,
-                  ),
-                  label: const Row(
-                    children: [
-                      Icon(Icons.pending_rounded,
-                          size: 18, color: Colors.orange),
-                      SizedBox(
-                        width: 4,
-                      ),
-                      Text(
-                        "Pending",
-                        style: TextStyle(color: Colors.orange),
-                      ),
-                    ],
-                  ),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                ),
-              ],
-            ),
-            const Divider(thickness: 1, height: 20),
-            IconText(
-              icon: Icons.access_time_outlined,
-              text: "Created: ${request.createdAt.toLocal()}",
-            ),
-            const SizedBox(height: 8),
-            IconText(
-              icon: Icons.public,
-              text: "IP: ${request.requesterIp}",
-            ),
-            const SizedBox(height: 16),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-              children: [
-                OutlinedButton.icon(
-                  onPressed: () async {
-                    await sendPendingRequestStatus(
-                      apiHandler,
-                      PendingStatus.rejected,
-                      requestId: request.id,
-                    );
-                    onAPISuccess(request.id);
-                  },
-                  icon: const Icon(Icons.close, size: 18),
-                  label: const Text("Reject"),
-                  style: OutlinedButton.styleFrom(
-                    foregroundColor: Colors.red,
-                    side: const BorderSide(color: Colors.red),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                  ),
-                ),
-                ElevatedButton.icon(
-                  onPressed: () async {
-                    await sendPendingRequestStatus(
-                      apiHandler,
-                      PendingStatus.rejected,
-                      requestId: request.id,
-                    );
-                  },
-                  icon: const Icon(Icons.check, size: 18),
-                  label: const Text("Accept"),
-                  style: ElevatedButton.styleFrom(
-                    foregroundColor: Colors.green,
-                    side: const BorderSide(color: Colors.green),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-class RequesterName extends StatelessWidget {
-  const RequesterName({
+class ErrorText extends StatelessWidget {
+  final Object? error;
+  const ErrorText({
     super.key,
-    required this.request,
-  });
-
-  final PendingRequest request;
-
-  @override
-  Widget build(BuildContext context) {
-    return Text(
-      request.requesterName,
-      style: const TextStyle(
-        fontSize: 18,
-        fontWeight: FontWeight.bold,
-        color: Colors.black87,
-      ),
-    );
-  }
-}
-
-class UserIcon extends StatelessWidget {
-  const UserIcon({
-    super.key,
+    this.error,
   });
 
   @override
   Widget build(BuildContext context) {
-    return const CircleAvatar(
-      backgroundColor: Colors.blueAccent,
-      radius: 22,
-      child: Icon(
-        Icons.person,
-        color: Colors.white,
-        size: 28,
-      ),
-    );
-  }
-}
-
-class IconText extends StatelessWidget {
-  final IconData icon;
-  final String text;
-  final Color? iconColor;
-
-  const IconText({
-    super.key,
-    required this.icon,
-    required this.text,
-    this.iconColor,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Row(
-      children: [
-        Icon(icon, size: 20, color: iconColor ?? Colors.grey),
-        const SizedBox(width: 8),
-        Expanded(
-          child: Text(
-            text,
-            style: const TextStyle(color: Colors.black87),
+    return Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          const Icon(Icons.error_outline, size: 64, color: Colors.red),
+          const SizedBox(height: 8),
+          Text(
+            "Error: $error",
+            style: Theme.of(context)
+                .textTheme
+                .titleMedium
+                ?.copyWith(color: Colors.red),
+            textAlign: TextAlign.center,
           ),
-        ),
-      ],
+        ],
+      ),
+    );
+  }
+}
+
+/*
+
+                  onPressed: () async {
+                    await sendPendingRequestStatus(
+                      apiHandler,
+                      PendingStatus.rejected,
+                      requestId: request.id,
+                    );
+                  },
+*/
+
+class NoRequestsFoundWidget extends StatelessWidget {
+  final Function() reload;
+  const NoRequestsFoundWidget({
+    super.key,
+    required this.reload,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          const Icon(Icons.inbox, size: 64, color: Colors.grey),
+          const SizedBox(height: 8),
+          const Text(
+            "No pending requests found.",
+            style: TextStyle(fontSize: 18, color: Colors.grey),
+          ),
+          ElevatedButton.icon(
+            icon: const Icon(Icons.refresh),
+            label: const Text("Reload"),
+            onPressed: reload,
+          )
+        ],
+      ),
     );
   }
 }
