@@ -1,103 +1,139 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:go_router/go_router.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:mauthn_app/pages/basepage.dart';
 import 'package:mauthn_app/providers.dart';
 import 'package:mauthn_app/routes.dart';
 import 'package:mauthn_app/services/api/api.dart';
+import 'package:mauthn_app/services/auth_service.dart';
 import 'package:passkeys/types.dart';
 
-class LoginPage extends StatefulHookConsumerWidget {
+final errorProvider = StateProvider<String?>((ref) => null);
+
+class LoginPage extends ConsumerWidget {
   const LoginPage({super.key});
 
-  @override
-  ConsumerState<LoginPage> createState() => _LoginPageState();
-}
+  Future<void> login(AuthService authService, ApiService apiHandler,
+      String userid, BuildContext context, WidgetRef ref) async {
+    try {
+      await authService.loginWithPasskey(
+          apiHandler: apiHandler, userid: userid);
+      context.go(Routes.home);
+    } catch (e) {
+      if (e is PasskeyAuthCancelledException) {
+        debugPrint(
+            'user cancelled authentication. This is not a problem. It can just be started again.');
+        return;
+      }
+      if (kDebugMode) {
+        ref.read(errorProvider.notifier).state = e.toString();
+      } else {
+        ref.read(errorProvider.notifier).state =
+            'An error occurred. Please try again.';
+      }
 
-class _LoginPageState extends ConsumerState<LoginPage> {
-  @override
-  void initState() {
-    super.initState();
+      debugPrint('error: $e');
+    }
   }
 
   @override
-  Widget build(BuildContext context) {
-    final error = useState<String?>(null);
+  Widget build(BuildContext context, WidgetRef ref) {
+    final error = ref.watch(errorProvider);
     final userid = ref.watch(userIdProvider);
     final authService = ref.watch(authServiceProvider);
     final apiHandler = ref.watch(apiHandlerProvider);
 
     return BasePage(
       child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
+        mainAxisSize: MainAxisSize.min,
         children: [
-          const Padding(
-            padding: EdgeInsets.symmetric(horizontal: 20, vertical: 5),
-            child: Text(
-              'Tired of passwords?',
-              style: TextStyle(
-                fontSize: 40,
+          const SizedBox(height: 128),
+          const Icon(
+            Icons.login,
+            size: 80,
+            color: Colors.white,
+          ),
+          const SizedBox(height: 16),
+          const Text(
+            "Welcome Back!",
+            style: TextStyle(
+              fontSize: 24,
+              fontWeight: FontWeight.bold,
+              color: Colors.white,
+            ),
+          ),
+          const SizedBox(height: 8),
+          Text(
+            "Log in securely using your biometrics.",
+            textAlign: TextAlign.center,
+            style: TextStyle(
+              color: Colors.white.withOpacity(0.8),
+            ),
+          ),
+          if (error != null)
+            Padding(
+              padding: const EdgeInsets.only(top: 10),
+              child: Text(
+                error,
+                style: TextStyle(
+                  color: Theme.of(context).colorScheme.error,
+                  fontSize: 14,
+                ),
+              ),
+            ),
+          const SizedBox(height: 32),
+          ElevatedButton.icon(
+            onPressed: () =>
+                login(authService, apiHandler, userid, context, ref),
+            icon: const Icon(Icons.fingerprint),
+            label: const Text("Log In with Biometrics"),
+            style: ElevatedButton.styleFrom(
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(30),
+              ),
+              minimumSize: const Size.fromHeight(50),
+              padding: const EdgeInsets.symmetric(
+                vertical: 16,
+                horizontal: 24,
+              ),
+              textStyle: const TextStyle(
                 fontWeight: FontWeight.bold,
+                fontSize: 16,
               ),
             ),
           ),
-          const Padding(
-            padding: EdgeInsets.symmetric(horizontal: 20, vertical: 10),
-            child: Text(
-              'Sign in using your biometrics like fingerprint or face.',
-              style: TextStyle(
-                fontSize: 20,
-              ),
+          TextButton.icon(
+            onPressed: () => context.go(Routes.register),
+            icon: const Icon(Icons.app_registration),
+            label: const Text("Not registered yet? Sign Up"),
+          ),
+          const SizedBox(height: 32),
+          Text(
+            "Secure • Fast • Convenient",
+            style: TextStyle(
+              color: Colors.white.withOpacity(0.8),
             ),
           ),
-          if (error.value != null)
-            Text(
-              error.value!,
-              style: TextStyle(color: Theme.of(context).colorScheme.error),
-            )
-          else
-            Container(),
-          const SizedBox(height: 20),
-          SizedBox(
-            width: double.infinity,
-            height: 50,
-            child: ElevatedButton(
-              onPressed: () async {
-                try {
-                  await authService.loginWithPasskey(
-                      apiHandler: apiHandler, userid: userid);
-                  context.go(Routes.home);
-                } catch (e) {
-                  if (e is PasskeyAuthCancelledException) {
-                    debugPrint(
-                        'user cancelled authentication. This is not a problem. It can just be started again.');
-                    return;
-                  }
-
-                  error.value = e.toString();
-                  debugPrint('error: $e');
-                }
-              },
-              child: const Text('sign in'),
-            ),
-          ),
-          const SizedBox(height: 10),
-          SizedBox(
-            width: double.infinity,
-            height: 50,
-            child: OutlinedButton(
-              style: OutlinedButton.styleFrom(
-                padding: const EdgeInsets.symmetric(vertical: 10),
-                side:
-                    BorderSide(width: 2, color: Theme.of(context).primaryColor),
-              ),
-              onPressed: () => context.go(Routes.register),
-              child: const Text('I want to create a new account'),
-            ),
+          const SizedBox(height: 16),
+          const Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(Icons.smartphone, color: Colors.white, size: 24),
+              SizedBox(width: 16),
+              Icon(Icons.shield, color: Colors.white, size: 24),
+              SizedBox(width: 16),
+              Icon(Icons.lock, color: Colors.white, size: 24),
+            ],
           ),
         ],
       ),
     );
   }
 }
+
+/*
+
+
+
+*/
