@@ -14,7 +14,7 @@ class HomePage extends ConsumerStatefulWidget {
 }
 
 class _HomePageState extends ConsumerState<HomePage> {
-  late Future<List<PendingRequest>> _pendingRequests;
+  late Future<List<VerificationRequest>> _pendingRequests;
   late ApiService apiHandler;
 
   @override
@@ -46,7 +46,7 @@ class _HomePageState extends ConsumerState<HomePage> {
     }
   }
 
-  handleRequestAction(int requestId, List<PendingRequest> requests,
+  handleRequestAction(int requestId, List<VerificationRequest> requests,
       PendingStatus status) async {
     bool isRequestSent =
         await sendRequest(requestId: requestId, status: status);
@@ -63,7 +63,7 @@ class _HomePageState extends ConsumerState<HomePage> {
     return Scaffold(
       body: RefreshIndicator(
         onRefresh: _refresh,
-        child: FutureBuilder<List<PendingRequest>>(
+        child: FutureBuilder<List<VerificationRequest>>(
           future: _pendingRequests,
           builder: (context, snapshot) {
             // Show the loading page
@@ -137,17 +137,6 @@ class ErrorText extends StatelessWidget {
     );
   }
 }
-
-/*
-
-                  onPressed: () async {
-                    await sendPendingRequestStatus(
-                      apiHandler,
-                      PendingStatus.rejected,
-                      requestId: request.id,
-                    );
-                  },
-*/
 
 class NoRequestsFoundWidget extends StatelessWidget {
   final Function() reload;

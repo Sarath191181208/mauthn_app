@@ -3,7 +3,7 @@ import 'package:intl/intl.dart';
 import 'package:mauthn_app/models/pending_request.dart';
 
 class RequestCard extends StatelessWidget {
-  final PendingRequest card;
+  final VerificationRequest card;
   final Function() onAccept;
   final Function() onReject;
 
