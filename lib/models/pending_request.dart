@@ -1,4 +1,4 @@
-class PendingRequest {
+class VerificationRequest {
   final int id;
   final String userId;
   final String requesterIp;
@@ -6,7 +6,7 @@ class PendingRequest {
   final PendingStatus authenticationStatus;
   final DateTime createdAt;
 
-  PendingRequest({
+  VerificationRequest({
     required this.id,
     required this.userId,
     required this.requesterIp,
@@ -16,11 +16,11 @@ class PendingRequest {
   });
 
   // Factory constructor to create an AuthRequest from JSON
-  factory PendingRequest.fromJson(Map<String, dynamic> json) {
+  factory VerificationRequest.fromJson(Map<String, dynamic> json) {
     var reqStatus = json['authentication_status'].toLowerCase();
     var authStatus = PendingStatus.values.firstWhere(
         (e) => e.toString().split(".").last.toLowerCase() == reqStatus);
-    return PendingRequest(
+    return VerificationRequest(
       id: json['id'],
       userId: json['user_id'],
       requesterIp: json['requester_ip'],
